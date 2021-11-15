@@ -1,21 +1,58 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 
-export default function App() {
+import * as React from 'react';
+import { Text, View } from 'react-native';
+import { WebView } from "react-native-webview";
+import { NavigationContainer } from '@react-navigation/native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
+
+
+function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <WebView 
+      source={{ uri: "https://sansmots.com/lite" }} 
+      style={{ marginTop: 20 }} 
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function ContactsScreen() {
+  return (
+    <WebView 
+      source={{ uri: "https://sansmots.com/lite/contacts" }} 
+      style={{ marginTop: 20 }} 
+    />
+  );
+}
+
+const Tab = createMaterialBottomTabNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        initialRouteName="Home"
+        activeColor="#ffffff"
+        inactiveColor="#000000"
+        barStyle={{ backgroundColor: '#24b4db' }}
+     >
+        <Tab.Screen name="Каталог" component={HomeScreen} 
+          options={{
+            tabBarLabel: 'Каталог',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="shopping" color={color} size={26} />
+            ),
+          }}
+        />
+        <Tab.Screen name="Контакты" component={ContactsScreen}
+        options={{
+            tabBarLabel: 'Контакты',
+            tabBarIcon: ({ color }) => (
+              <MaterialCommunityIcons name="contacts" color={color} size={26} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
