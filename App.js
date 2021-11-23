@@ -106,6 +106,7 @@ class WebViewTab extends React.Component {
   render() {
     return (
       <View style={{flex: 1}}>
+        { !!this.state.showLoginWebView && <LoginWebView/> }
         <ScrollView 
             contentContainerStyle = {styles.WebViewScrollStyle}
             refreshControl={
@@ -155,9 +156,8 @@ export class SettingsScreen extends React.Component {
 
   _onLoginStateChange(webViewState){
     console.log(webViewState.url)
-    if (webViewState.url == LOGIN_URL) {
-      this.setState({showLoginWebView: true})
-    }
+
+    this.setState({showLoginWebView: webViewState.url == LOGIN_URL})
   }
 
   logout() {
