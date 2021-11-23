@@ -9,7 +9,7 @@ import { createMaterialBottomTabNavigator } from '@react-navigation/material-bot
 
 import { Constants } from 'expo';
 
-import {LOGOUT_URL, LOGIN_URL, CATALOG_URL, CONTACTS_URL} from './src/constants';
+import {LOGOUT_URL, LOGIN_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL} from './src/constants';
 
 
 const styles = StyleSheet.create({
@@ -57,21 +57,33 @@ function wait(timeout) {
 }
 
 
-const LoginWebView: FunctionComponent = () => (
-  <Modal>
-    <View style={styles.modal}>
-      <View style={styles.modalContainer}>
-        <WebView style={{ flex : 1 }}
-          source={{ uri: LOGIN_URL }}
-        />
-      </View>
-    </View>
-  </Modal>
+class LoginWebView extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {modalVisible: true};
+  }
 
-);
+  _onNavigationStateChange(webViewState){
+    if (webViewState.url == INITFULL_URL) {
+      this.setState({ modalVisible: false });
+    }
+  }
 
-function onLoginStateChange(webViewState){
-  console.log(webViewState.url)
+  render() {
+    return (
+      <Modal visible={this.state.modalVisible}>
+        <View style={styles.modal}>
+          <View style={styles.modalContainer}>
+            <WebView style={{ flex : 1 }}
+              source={{ uri: LOGIN_URL }}
+              onNavigationStateChange={this._onNavigationStateChange.bind(this)}
+            />
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
 }
 
 
@@ -97,9 +109,9 @@ class WebViewTab extends React.Component {
   };
 
   _onNavigationStateChange(webViewState){
-    console.log(webViewState.url)
     if (webViewState.url == LOGIN_URL) {
       this.setState({showLoginWebView: true})
+      this.webViewRef.current.reload();
     }
   }
 
@@ -155,9 +167,7 @@ export class SettingsScreen extends React.Component {
   }
 
   _onLoginStateChange(webViewState){
-    console.log(webViewState.url)
-
-    this.setState({showLoginWebView: webViewState.url == LOGIN_URL})
+    this.setState({showLoginWebView: webViewState.url == LOGIN_URL, "logoutWebView": webViewState.url != LOGIN_URL});
   }
 
   logout() {
@@ -170,7 +180,6 @@ export class SettingsScreen extends React.Component {
   }
 
   render() {
-   console.log(this.state.showWebView)
    return (
      <View style={{flex : 1, justifyContent : 'center', alignItems: 'center'}}>
         <Button
