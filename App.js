@@ -7,10 +7,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 
-import { Constants } from 'expo';
+import {CART_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL, LOGIN_URL, LOGOUT_URL} from './src/constants';
 
-import {LOGOUT_URL, LOGIN_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL} from './src/constants';
-
+//export NODE_OPTIONS=--openssl-legacy-provider 
 
 const styles = StyleSheet.create({
   container: {
@@ -88,14 +87,13 @@ class LoginWebView extends React.Component {
 
 
 class WebViewTab extends React.Component {
-
   constructor(props) {
     super(props);
     this.url = "";
     this.webViewRef = React.createRef();
     this.state = {
       refreshing: false,
-      showLoginWebView: false
+      showLoginWebView: false,
     };
   }
 
@@ -115,7 +113,21 @@ class WebViewTab extends React.Component {
     }
   }
 
+  _onMessage = (message) => {
+    // console.log(message.nativeEvent.data);
+    if (message.nativeEvent.data.startsWith("productsCount") &&
+      !isNaN(message.nativeEvent.data.substring("productsCount".length))) {
+      this.props.handleProductCountChange(message.nativeEvent.data.substring("productsCount".length));
+    }
+  }
+
+
   render() {
+    const injectedJavascript = `(function() {
+      window.postMessage = function(data) {
+        window.ReactNativeWebView.postMessage(data);
+      };
+    })()`;
     return (
       <View style={{flex: 1}}>
         { !!this.state.showLoginWebView && <LoginWebView/> }
@@ -133,6 +145,8 @@ class WebViewTab extends React.Component {
             ref = {this.webViewRef}
             source={{ uri: this.url }} 
             onNavigationStateChange={this._onNavigationStateChange.bind(this)}
+            onMessage={this._onMessage}
+            injectedJavaScript={injectedJavascript}
             javaScriptEnabled = {true}
             domStorageEnabled={true}
             startInLoadingState={false}
@@ -148,6 +162,13 @@ class HomeScreen extends WebViewTab {
   constructor(props) {
     super(props);
     this.url = CATALOG_URL;
+  };
+}
+
+class CartScreen extends WebViewTab {
+  constructor(props) {
+    super(props);
+    this.url = CART_URL;
   };
 }
 
@@ -199,43 +220,78 @@ export class SettingsScreen extends React.Component {
 const Tab = createMaterialBottomTabNavigator();
 
 
-export default function App() {
+export class ScreenContainer extends React.Component {
 
-  return (
-    <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="Catalog"
-        lazy={false}
-        activeColor="#ffffff"
-        inactiveColor="#000000"
-        barStyle={{ backgroundColor: '#24b4db' }}
-     >
-        <Tab.Screen name="Catalog" component={HomeScreen} 
+  constructor() {
+     super();
+     this.state = {
+       productCount: 0
+     }
+  }
+
+  handleProductCountChange = (val) => {
+    this.setState({
+       productCount: val
+     });
+  }
+
+  render() {
+    return (
+      <NavigationContainer>
+        <Tab.Navigator
+          initialRouteName="Catalog"
+          lazy={false}
+          activeColor="#ffffff"
+          inactiveColor="#000000"
+          barStyle={{ backgroundColor: '#24b4db' }}
+
+       >
+          <Tab.Screen name="Catalog"
+            options={{
+              tabBarLabel: 'Каталог',
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons name="shopping" color={color} size={26} />
+              ),
+            }}
+          >
+            {props => <HomeScreen {...props} handleProductCountChange={this.handleProductCountChange} />}
+          </Tab.Screen>
+          <Tab.Screen name="Cart"
+            options={{
+              tabBarLabel: 'Корзина',
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons name="cart" color={color} size={26} />
+              ),
+              tabBarBadge: this.state.productCount
+            }}
+          >
+            {props => <CartScreen {...props} handleProductCountChange={this.handleProductCountChange} />}
+          </Tab.Screen>
+          <Tab.Screen name="Contacts" component={ContactsScreen}
           options={{
-            tabBarLabel: 'Каталог',
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons name="shopping" color={color} size={26} />
-            ),
-          }}
-        />
-        <Tab.Screen name="Contacts" component={ContactsScreen}
-        options={{
-            tabBarLabel: 'Контакты',
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons name="contacts" color={color} size={26} />
-            ),
-          }}
-        />
-        <Tab.Screen name="Settings" component={SettingsScreen}
-        options={{
-            tabBarLabel: 'Настройки',
-            tabBarIcon: ({ color }) => (
-              <MaterialCommunityIcons name="account-details" color={color} size={26} />
-            ),
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+              tabBarLabel: 'Контакты',
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons name="contacts" color={color} size={26} />
+              ),
+            }}
+          />
+          <Tab.Screen name="Settings" component={SettingsScreen}
+          options={{
+              tabBarLabel: 'Настройки',
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons name="account-details" color={color} size={26} />
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    );
+  }
+}
+
+export default function App() {
+  return (
+    <ScreenContainer/>
   );
 }
 

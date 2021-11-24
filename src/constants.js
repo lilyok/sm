@@ -6,3 +6,4 @@ export const INITFULL_URL = "https://sansmots.com/members/";
 
 export const CATALOG_URL = "https://sansmots.com/lite";
 export const CONTACTS_URL = "https://sansmots.com/lite/contacts";
+export const CART_URL = "https://sansmots.com/lite/cart";
