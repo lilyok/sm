@@ -262,7 +262,7 @@ export class ScreenContainer extends React.Component {
               tabBarIcon: ({ color }) => (
                 <MaterialCommunityIcons name="cart" color={color} size={26} />
               ),
-              tabBarBadge: this.state.productCount
+              tabBarBadge: this.state.productCount == 0 ? null : this.state.productCount
             }}
           >
             {props => <CartScreen {...props} handleProductCountChange={this.handleProductCountChange} />}
