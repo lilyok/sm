@@ -7,7 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 
-import {CART_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL, LOGIN_URL, LOGOUT_URL} from './src/constants';
+import {CART_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL, LOGIN_URL, LOGOUT_URL, MAIN_COLOR, THANKSFULL_URL} from './src/constants';
 
 //export NODE_OPTIONS=--openssl-legacy-provider 
 
@@ -18,24 +18,8 @@ const styles = StyleSheet.create({
   WebViewScrollStyle: {
      flex: 1,
      paddingTop: 50,
-     backgroundColor: '#24b4db'
+     backgroundColor: MAIN_COLOR
   },
-  ScrollStyle: {
-     paddingTop: 50,
-     backgroundColor: '#24b4db'
-  },
-  Settings: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-   backgroundColor: '#ecf0f1',
-  },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#DDDDDD',
-    padding: 10
-  },
-
   modal : {
       flex : 1,
       justifyContent : 'center',
@@ -93,7 +77,7 @@ class WebViewTab extends React.Component {
     this.webViewRef = React.createRef();
     this.state = {
       refreshing: false,
-      showLoginWebView: false,
+      showLoginWebView: false
     };
   }
 
@@ -103,21 +87,28 @@ class WebViewTab extends React.Component {
     wait(2000).then(() => {
       this.setState({refreshing: false});
     });
-    console.log("reload");
+    // console.log("reload");
   };
 
   _onNavigationStateChange(webViewState){
     if (webViewState.url == LOGIN_URL) {
       this.setState({showLoginWebView: true})
       this.webViewRef.current.reload();
+    } else if (webViewState.url == THANKSFULL_URL) {
+      this.webViewRef.current.goBack()
     }
   }
 
   _onMessage = (message) => {
     // console.log(message.nativeEvent.data);
-    if (message.nativeEvent.data.startsWith("productsCount") &&
-      !isNaN(message.nativeEvent.data.substring("productsCount".length))) {
-      this.props.handleProductCountChange(message.nativeEvent.data.substring("productsCount".length));
+    const key = "productsCount";
+    if (!message.nativeEvent.data.startsWith(key)) {
+      return;
+    }
+    const value = message.nativeEvent.data.substring(key.length);
+
+    if (!isNaN(value)) {
+      this.props.handleProductCountChange(value);
     }
   }
 
@@ -163,12 +154,20 @@ class HomeScreen extends WebViewTab {
     super(props);
     this.url = CATALOG_URL;
   };
+
 }
 
 class CartScreen extends WebViewTab {
   constructor(props) {
     super(props);
     this.url = CART_URL;
+  };
+
+  componentDidUpdate() {
+    // console.log("componentDidUpdate", this.props.productUpdate);
+    if (this.props.productUpdate) {
+      this.webViewRef.current.reload();
+    }
   };
 }
 
@@ -225,11 +224,15 @@ export class ScreenContainer extends React.Component {
   constructor() {
      super();
      this.state = {
-       productCount: 0
+       productCount: 0,
+       update: false
      }
   }
 
   handleProductCountChange = (val) => {
+    this.setState({
+       update: this.state.productCount == 0 && val > 0
+     });
     this.setState({
        productCount: val
      });
@@ -237,13 +240,13 @@ export class ScreenContainer extends React.Component {
 
   render() {
     return (
-      <NavigationContainer>
+      <NavigationContainer  theme={{colors:{background: MAIN_COLOR}}}>
         <Tab.Navigator
           initialRouteName="Catalog"
           lazy={false}
           activeColor="#ffffff"
           inactiveColor="#000000"
-          barStyle={{ backgroundColor: '#24b4db' }}
+          barStyle={{ backgroundColor: MAIN_COLOR }}
 
        >
           <Tab.Screen name="Catalog"
@@ -265,7 +268,7 @@ export class ScreenContainer extends React.Component {
               tabBarBadge: this.state.productCount == 0 ? null : this.state.productCount
             }}
           >
-            {props => <CartScreen {...props} handleProductCountChange={this.handleProductCountChange} />}
+            {props => <CartScreen {...props} handleProductCountChange={this.handleProductCountChange} productUpdate={this.state.update} />}
           </Tab.Screen>
           <Tab.Screen name="Contacts" component={ContactsScreen}
           options={{
