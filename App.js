@@ -1,13 +1,14 @@
 
 import React, { FunctionComponent, useRef, useState } from 'react'
-import { Button, Linking, Modal, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Linking, Modal, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from "react-native-webview";
 import { ScrollView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 
-import {CART_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL, LOGIN_URL, LOGOUT_URL, MAIN_COLOR, THANKSFULL_URL} from './src/constants';
+import {CART_URL, CATALOG_URL, CONTACTS_URL, INITFULL_URL, LOGIN_URL, LOGOUT_URL, MAIN_COLOR, SECONDARY_COLOR, THANKSFULL_URL} from './src/constants';
 
 //export NODE_OPTIONS=--openssl-legacy-provider 
 
@@ -27,9 +28,28 @@ const styles = StyleSheet.create({
       backgroundColor: 'rgba(0,0,0,0.5)'
   },
   modalContainer : {
-      backgroundColor : 'white',
+      backgroundColor : SECONDARY_COLOR,
       width : '100%',
       height : '100%',
+  },
+
+  logoutScreenButton:{
+    marginRight:40,
+    marginLeft:40,
+    marginTop:10,
+    paddingTop:10,
+    paddingBottom:10,
+    backgroundColor: SECONDARY_COLOR,
+    borderRadius:10,
+    borderWidth: 2,
+    borderColor: MAIN_COLOR
+  },
+  logoutText:{
+      color: MAIN_COLOR,
+      textAlign:'center',
+      paddingLeft : 10,
+      paddingRight : 10,
+      fontSize: 23,
   },
 });
 
@@ -105,10 +125,14 @@ class WebViewTab extends React.Component {
     if (!message.nativeEvent.data.startsWith(key)) {
       return;
     }
+    console.log(message.nativeEvent.data)
+
     const value = message.nativeEvent.data.substring(key.length);
 
-    if (!isNaN(value)) {
+    if (!isNaN(value) && value != "0") {
       this.props.handleProductCountChange(value);
+    } else {
+      this.props.handleProductCountChange(0);
     }
   }
 
@@ -179,6 +203,15 @@ class ContactsScreen extends WebViewTab {
 }
 
 
+const copyToClipboard = () => {
+  Clipboard.setString('hello world');
+};
+
+const fetchCopiedText = async () => {
+  const text = await Clipboard.getStringAsync();
+  setCopiedText(text);
+};
+
 export class SettingsScreen extends React.Component {
 
   state={
@@ -201,12 +234,26 @@ export class SettingsScreen extends React.Component {
 
   render() {
    return (
-     <View style={{flex : 1, justifyContent : 'center', alignItems: 'center'}}>
-        <Button
+     <View style={{flex : 1, justifyContent : 'center', alignItems: 'center', backgroundColor: SECONDARY_COLOR}}>
+          <TouchableOpacity onPress={copyToClipboard}>
+          <View>
+            <Text style={{color: 'red', fontSize: 14 , fontFamily:'Arial', fontStyle: 'italic', textAlign: 'center', marginTop: 3, marginLeft: 25, marginBottom: 17}}> 
+                        COUPONTEST
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.logoutScreenButton}
+          onPress={() => this.setState({logoutWebView: true})}
+          underlayColor={ SECONDARY_COLOR }>
+          <Text style={styles.logoutText}>Выйти</Text>
+        </TouchableOpacity>
+       {/* <Button
+          color="#ffffff"
           style={styles.paragraph}
           title="Logout"
           onPress={() => this.setState({logoutWebView: true})}
-        />
+        />*/}
         { this.state.logoutWebView && this.logout() }
         { !!this.state.showLoginWebView && <LoginWebView/> }
       </View>
@@ -231,7 +278,7 @@ export class ScreenContainer extends React.Component {
 
   handleProductCountChange = (val) => {
     this.setState({
-       update: this.state.productCount == 0 && val > 0
+       update: this.state.productCount == 0 && val > 0 || this.state.productCount != 0 && val == 0
      });
     this.setState({
        productCount: val
@@ -240,11 +287,11 @@ export class ScreenContainer extends React.Component {
 
   render() {
     return (
-      <NavigationContainer  theme={{colors:{background: MAIN_COLOR}}}>
+      <NavigationContainer theme={{colors:{background: MAIN_COLOR}}}>
         <Tab.Navigator
           initialRouteName="Catalog"
           lazy={false}
-          activeColor="#ffffff"
+          activeColor={ SECONDARY_COLOR }
           inactiveColor="#000000"
           barStyle={{ backgroundColor: MAIN_COLOR }}
 
@@ -280,7 +327,7 @@ export class ScreenContainer extends React.Component {
           />
           <Tab.Screen name="Settings" component={SettingsScreen}
           options={{
-              tabBarLabel: 'Настройки',
+              tabBarLabel: 'Личный кабинет',
               tabBarIcon: ({ color }) => (
                 <MaterialCommunityIcons name="account-details" color={color} size={26} />
               ),

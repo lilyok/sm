@@ -12,3 +12,4 @@ export const CART_URL = "https://sansmots.com/lite/cart";
 
 
 export const MAIN_COLOR = "#24b4db";
+export const SECONDARY_COLOR = "#ffffff";

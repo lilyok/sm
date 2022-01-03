@@ -17,14 +17,17 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "lil.sansmots",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "sansmots.android.app"
+      "versionCode": 1,
+      "package": "com.lil.sansmots"
     },
     "web": {
       "favicon": "./assets/favicon.png"
